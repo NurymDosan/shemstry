@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Химиялық формула калькуляторы</title>
+<style>
+    body {
+        font-family: 'Trebuchet MS', sans-serif;
+        background: radial-gradient(circle at top, #001f3f, #000);
+        color: #fff;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    h1 {
+        text-align: center;
+        color: #00e5ff;
+        text-shadow: 0 0 15px #00ffff;
+        margin-top: 40px;
+    }
+
+    .container {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        flex-wrap: wrap;
+        margin-top: 50px;
+    }
+
+    .calculator {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        padding: 30px;
+        width: 330px;
+        box-shadow: 0 0 25px rgba(0,255,255,0.4);
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+    .calculator:hover {
+        transform: scale(1.03);
+        box-shadow: 0 0 35px rgba(0,255,255,0.6);
+    }
+
+    .calculator h2 {
+        color: #00ffff;
+        margin-bottom: 15px;
+    }
+
+    input, select {
+        width: 85%;
+        padding: 8px;
+        margin: 8px 0;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    button {
+        width: 90%;
+        padding: 10px;
+        background-color: #00bfa5;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+        box-shadow: 0 0 15px #00e5ff;
+    }
+
+    button:hover {
+        background-color: #009688;
+        box-shadow: 0 0 25px #00e5ff;
+    }
+
+    .result {
+        margin-top: 20px;
+        font-size: 18px;
+        color: #fff;
+        text-shadow: 0 0 10px #00ffff;
+    }
+
+    footer {
+        text-align: center;
+        color: #b2ebf2;
+        font-size: 14px;
+        margin-top: 50px;
+        padding-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+
+<h1>⚗️ Химиялық формула калькуляторы ⚗️</h1>
+
+<div class="container">
+    <!-- 2 элемент калькуляторы -->
+    <div class="calculator">
+        <h2>2 элементтен тұратын қосылыс</h2>
+        <input type="text" id="element1" placeholder="1-элемент (Na)">
+        <input type="text" id="element2" placeholder="2-элемент (Cl)">
+        <button onclick="calculate2()">Формуланы құрастыру</button>
+        <div class="result" id="result2"></div>
+    </div>
+
+    <!-- 3 элемент калькуляторы -->
+    <div class="calculator">
+        <h2>3 элементтен тұратын қосылыс</h2>
+
+        <select id="mode">
+            <option value="radical">Металл + күрделі ион</option>
+            <option value="oxide">Металл емес + оттек (оксид/қышқыл)</option>
+        </select>
+
+        <div id="radicalMode">
+            <input type="text" id="metal" placeholder="Металл (Ca)">
+            <select id="radical">
+                <option value="">Күрделі топ таңдаңыз</option>
+                <option value="OH">OH (гидроксид)</option>
+                <option value="NO3">NO₃ (нитрат)</option>
+                <option value="SO4">SO₄ (сульфат)</option>
+                <option value="SO3">SO₃ (сульфит)</option>
+                <option value="CO3">CO₃ (карбонат)</option>
+                <option value="PO4">PO₄ (фосфат)</option>
+            </select>
+        </div>
+
+        <div id="oxideMode" style="display:none;">
+            <input type="text" id="nonmetal" placeholder="Бейметалл (S)">
+            <input type="text" id="oxygen" value="O" readonly>
+        </div>
+
+        <button onclick="calculate3()">Формуланы құрастыру</button>
+        <div class="result" id="result3"></div>
+    </div>
+</div>
+
+<footer>
+    © 2025 Химия калькуляторы
+</footer>
+
+<script>
+const valencies = {
+    H: 1, Li: 1, Na: 1, K: 1, Rb: 1, Cs: 1,
+    Be: 2, Mg: 2, Ca: 2, Sr: 2, Ba: 2,
+    B: 3, Al: 3,
+    C: 4, Si: 4,
+    N: 3, P: 3, S: 2, O: 2, Cl: 1, F: 1, Br: 1, I: 1
+};
+
+const radicals = {
+    OH: 1, NO3: 1, SO4: 2, SO3: 2, CO3: 2, PO4: 3
+};
+
+const elementNames = {
+    H: "сутегі", O: "оттек", Na: "натрий", Cl: "хлор",
+    K: "калий", Mg: "магний", Ca: "кальций", S: "күкірт",
+    N: "азот", P: "фосфор", F: "фтор", Br: "бром", I: "йод",
+    Li: "литий", Rb: "рубидий", Cs: "цезий", Be: "бериллий",
+    Al: "алюминий", B: "бор", Si: "кремний", Sr: "стронций",
+    Ba: "барий", C: "көміртек"
+};
+
+const radicalNames = {
+    OH: "гидроксид", NO3: "нитрат", SO4: "сульфат", SO3: "сульфит", CO3: "карбонат", PO4: "фосфат"
+};
+
+function gcd(a, b) {
+    if (!b) return a;
+    return gcd(b, a % b);
+}
+
+document.getElementById('mode').addEventListener('change', function() {
+    if (this.value === 'oxide') {
+        document.getElementById('oxideMode').style.display = 'block';
+        document.getElementById('radicalMode').style.display = 'none';
+    } else {
+        document.getElementById('oxideMode').style.display = 'none';
+        document.getElementById('radicalMode').style.display = 'block';
+    }
+});
+
+function calculate2() {
+    const e1 = document.getElementById('element1').value.trim();
+    const e2 = document.getElementById('element2').value.trim();
+    const res = document.getElementById('result2');
+
+    if (!valencies[e1] || !valencies[e2]) {
+        res.innerText = "❌ Элемент дұрыс енгізілмеген!";
+        return;
+    }
+
+    const v1 = valencies[e1], v2 = valencies[e2];
+    const factor = gcd(v1, v2);
+    const sub1 = v2 / factor, sub2 = v1 / factor;
+
+    const formula = `${e1}${sub1 > 1 ? sub1 : ''}${e2}${sub2 > 1 ? sub2 : ''}`;
+
+    // Қазақша атау
+    let name = "";
+    if (e1 === "H") {
+        name = e2 === "O" ? "су" : elementNames[e2] + " қышқылы";
+    } else {
+        name = elementNames[e1] + " " + elementNames[e2] + (sub2 > 1 ? "" : "иді");
+    }
+
+    res.innerHTML = `✅ Формула: <strong>${formula}</strong><br>Атауы: <strong>${name}</strong>`;
+}
+
+function calculate3() {
+    const mode = document.getElementById('mode').value;
+    const res = document.getElementById('result3');
+
+    if (mode === 'radical') {
+        const metal = document.getElementById('metal').value.trim();
+        const radical = document.getElementById('radical').value.trim();
+
+        if (!valencies[metal] || !radicals[radical]) {
+            res.innerText = "❌ Металл немесе күрделі топ дұрыс емес!";
+            return;
+        }
+
+        const vMetal = valencies[metal];
+        const vRadical = radicals[radical];
+        const factor = gcd(vMetal, vRadical);
+
+        const subMetal = vRadical / factor;
+        const subRadical = vMetal / factor;
+
+        const formula = subRadical > 1
+            ? `${metal}${subMetal > 1 ? subMetal : ''}(${radical})${subRadical}`
+            : `${metal}${subMetal > 1 ? subMetal : ''}${radical}`;
+
+        const name = elementNames[metal] + " " + radicalNames[radical];
+        res.innerHTML = `✅ Формула: <strong>${formula}</strong><br>Атауы: <strong>${name}</strong>`;
+    } else if (mode === 'oxide') {
+        const nm = document.getElementById('nonmetal').value.trim();
+        const o = 'O';
+
+        if (!valencies[nm] || !valencies[o]) {
+            res.innerText = "❌ Элемент дұрыс емес!";
+            return;
+        }
+
+        const vNM = valencies[nm];
+        const vO = valencies[o];
+        const factor = gcd(vNM, vO);
+
+        const subNM = vO / factor;
+        const subO = vNM / factor;
+
+        const formula = `${nm}${subNM > 1 ? subNM : ''}${o}${subO > 1 ? subO : ''}`;
+
+        const name = elementNames[nm] + " оксиді";
+        res.innerHTML = `✅ Формула: <strong>${formula}</strong><br>Атауы: <strong>${name}</strong>`;
+    }
+}
+</script>
+</body>
+</html>
